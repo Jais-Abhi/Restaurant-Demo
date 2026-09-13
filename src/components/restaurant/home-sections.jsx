@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import restaurant, { navigation } from "@/lib/restaurant";
 
 const Arrow = () => <span aria-hidden="true">↗</span>;
@@ -12,9 +12,38 @@ export function Navbar() {
 }
 
 export function HeroSection() {
+  const target = useRef({ x: 0, y: 0 });
+  const frame = useRef(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
-  useEffect(() => { const move = (event) => { if (window.matchMedia("(pointer: fine)").matches) setPointer({ x: (event.clientX / window.innerWidth - .5) * 2, y: (event.clientY / window.innerHeight - .5) * 2 }); }; window.addEventListener("pointermove", move, { passive: true }); return () => window.removeEventListener("pointermove", move); }, []);
-  return <section className="hero" onMouseMove={() => {}}><Image src={restaurant.heroImage} alt="Warmly lit dining room at The Royal Spice" fill priority sizes="100vw" className="hero-image" style={{ transform: `scale(1.04) translate(${pointer.x * -4}px, ${pointer.y * -3}px)` }} /><div className="hero-shade"/><div className="hero-spice hero-spice-one" aria-hidden="true">✦</div><div className="hero-spice hero-spice-two" aria-hidden="true">✧</div><div className="hero-content" style={{ transform: `translate(${pointer.x * 3}px, ${pointer.y * 2}px)` }}><p className="eyebrow light">EST. 2014 <span>·</span> KANPUR</p><h1>Authentic<br/><i>Indian</i> Flavours</h1><p className="hero-sub">Made to bring people together.</p><p className="hero-copy">{restaurant.description}</p><div className="hero-buttons"><Link className="button button-light" href="/menu">Explore Menu <Arrow /></Link><Link className="button button-ghost" href="/order">Reserve a Table</Link></div></div><div className="rating-badge"><strong>★</strong><span><b>{restaurant.rating}</b> on Google<br/><small>{restaurant.reviewsCount} reviews</small></span></div><span className="hero-scroll">Scroll to discover ↓</span></section>;
+
+  useEffect(() => {
+    const move = (event) => {
+      if (window.matchMedia("(pointer: fine)").matches) {
+        target.current = {
+          x: (event.clientX / window.innerWidth - 0.5) * 2,
+          y: (event.clientY / window.innerHeight - 0.5) * 2,
+        };
+      }
+    };
+    const animate = () => {
+      setPointer((current) => {
+        const next = {
+          x: current.x + (target.current.x - current.x) * 0.12,
+          y: current.y + (target.current.y - current.y) * 0.12,
+        };
+        return Math.abs(next.x - current.x) < 0.001 && Math.abs(next.y - current.y) < 0.001 ? current : next;
+      });
+      frame.current = requestAnimationFrame(animate);
+    };
+    window.addEventListener("pointermove", move, { passive: true });
+    frame.current = requestAnimationFrame(animate);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      if (frame.current) cancelAnimationFrame(frame.current);
+    };
+  }, []);
+
+  return <section className="hero"><Image src={restaurant.heroImage} alt="Warmly lit dining room at The Royal Spice" fill priority sizes="100vw" className="hero-image" style={{ transform: `scale(1.12) translate(${pointer.x * -15}px, ${pointer.y * -12}px)` }} /><div className="hero-shade"/><div className="hero-spice hero-spice-one" aria-hidden="true" style={{ transform: `translate(${pointer.x * 18}px, ${pointer.y * 14}px) rotate(${pointer.x * 16}deg)` }}>✦</div><div className="hero-spice hero-spice-two" aria-hidden="true" style={{ transform: `translate(${pointer.x * -12}px, ${pointer.y * -10}px) rotate(${pointer.y * -20}deg)` }}>✧</div><div className="hero-content" style={{ transform: `translate(${pointer.x * 10}px, ${pointer.y * 7}px)` }}><p className="eyebrow light">EST. 2014 <span>·</span> KANPUR</p><h1>Authentic<br/><i>Indian</i> Flavours</h1><p className="hero-sub">Made to bring people together.</p><p className="hero-copy">{restaurant.description}</p><div className="hero-buttons"><Link className="button button-light" href="/menu">Explore Menu <Arrow /></Link><Link className="button button-ghost" href="/order">Reserve a Table</Link></div></div><div className="rating-badge"><strong>★</strong><span><b>{restaurant.rating}</b> on Google<br/><small>{restaurant.reviewsCount} reviews</small></span></div><span className="hero-scroll">Scroll to discover ↓</span></section>;
 }
 
 export function HighlightsSection() { return <section className="highlights">{[["★", restaurant.rating, "Google Rating"],["01", restaurant.reviewsCount, "Happy Reviews"],["12", restaurant.experience, "Years of warmth"],["✦", "50+", "Signature dishes"]].map(([mark, value, label]) => <div className="stat" key={label}><span className="stat-mark">{mark}</span><div><strong>{value}</strong><small>{label}</small></div></div>)}</section>; }
