@@ -1,1 +1,8 @@
-export default function GalleryPage() { return <main className="coming-soon"><p className="eyebrow">THE ROYAL SPICE</p><h1>Gallery <i>coming soon.</i></h1></main> }
+import { GalleryPageContent } from "@/components/restaurant/gallery-sections";
+import { galleryMetadata } from "@/lib/gallery";
+
+export const metadata = galleryMetadata;
+
+export default function GalleryPage() {
+  return <main className="gallery-page"><GalleryPageContent /></main>;
+}
